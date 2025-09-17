@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base container styles */
+#feedbackflow-widget-container {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+}
+
+/* Ensure iframe content is properly styled */
+:root {
+  --feedbackflow-primary: rgb(59 130 246);
+  --feedbackflow-warning: rgb(234 179 8);
+  --feedbackflow-error: rgb(220 38 38);
+  --feedbackflow-high: rgb(249 115 22);
+}
+
+/* Reset iframe styles */
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+} 

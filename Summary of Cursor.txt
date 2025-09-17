@@ -1,0 +1,66 @@
+Here’s a summary of what we’ve achieved so far and the current issues we’re facing with the FeedbackFlow app:
+
+---
+
+## **What We’ve Achieved**
+
+### **1. Core Architecture & Role System**
+- **Multi-role system**: Implemented Admin, Moderator, and Test Member roles with proper access control.
+- **Test Group Management**: Moderators can create test groups tied to specific domains, invite members, and manage group settings.
+
+### **2. Feedback Widget Development**
+- **Widget UI**: Built a feedback widget that allows users to drop pins, select emotions, and submit comments on any page.
+- **Widget Isolation**: Designed the widget to be embeddable and isolated from host site styles.
+- **Widget Button**: Floating feedback button intended to appear on the tested domain.
+
+### **3. Authentication & Session Management**
+- **Google OAuth**: Integrated authentication using NextAuth.js.
+- **Session Tracking**: Test sessions are started and tracked for each test member and group.
+
+### **4. API & Data Layer**
+- **Prisma Models**: Defined models for users, test groups, sessions, feedback, and more.
+- **API Endpoints**: Created endpoints for session management, widget token generation, domain validation, and feedback submission.
+- **JWT Tokens**: Widget authentication uses JWT tokens for secure, role-based access.
+
+### **5. Widget Embedding & Security**
+- **Widget Script**: Developed a script to inject the widget into any domain, with proper CORS and domain validation.
+- **Domain Validation**: Ensures the widget only works on authorized domains for each test group.
+
+### **6. Admin & Moderator Dashboards**
+- **Feedback Management**: Moderators and admins can view, manage, and resolve feedback submitted by test members.
+- **Analytics & History**: Dashboards show group stats, feedback history, and quick links for management.
+
+---
+
+## **Current Problems / Issues**
+
+### **1. Widget Not Appearing on Tested Domain**
+- When starting a test session, the tested domain opens in a new tab, but the feedback button/widget does **not** appear.
+- The widget script at `/api/widget/feedback-widget.js` is returning a **404 Not Found** error, so the browser cannot load the widget code.
+
+### **2. API Route/Static File Confusion**
+- There may be a conflict or misconfiguration between the API route (`src/pages/api/widget/feedback-widget.ts`) and the static file (`public/widget/feedback-widget.js`).
+- The API route is not being served as expected, possibly due to file placement, naming, or server restart issues.
+
+### **3. Widget Initialization**
+- Because the widget script isn’t loading, the initialization code in the tested domain never runs, so no feedback button appears.
+
+### **4. Potential Dev Server/Build Issues**
+- If files were added or renamed, the Next.js dev server may need a restart to recognize new API routes.
+
+---
+
+## **Next Steps to Resolve**
+
+1. **Verify the API route file exists and is correctly named/placed.**
+2. **Restart the dev server** to ensure Next.js picks up new/changed API routes.
+3. **Test the API route directly** in the browser to confirm it serves the widget script.
+4. **Ensure no static file conflicts** at the same path as the API route.
+5. **Once the script loads, retest the widget embedding and feedback flow.**
+
+---
+
+**In summary:**  
+We have built a robust feedback collection system with role-based access, embeddable widget, and secure session management. The main blocker now is the widget script not being served, preventing the feedback button from appearing on tested domains. Fixing the API route/static file issue should resolve this and allow full end-to-end testing of the feedback workflow.
+
+Let me know if you want to focus on a specific troubleshooting step or need help with a particular file or configuration!

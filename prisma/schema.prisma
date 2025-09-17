@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model UserSettings {
+  id                   String   @id @default(cuid())
+  notificationsEnabled Boolean  @default(true)
+  emailNotifications   Boolean  @default(true)
+  weeklyDigest         Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User?
+
+  @@map("user_settings")
+}
+
+model User {
+  id                   String            @id @default(cuid())
+  name                 String?
+  email                String            @unique
+  emailVerified        DateTime?
+  image                String?
+  role                 Role              @default(TEST_MEMBER)
+  passwordHash         String?
+  companyName          String?
+  designation          String?
+  privacyAcceptedAt    DateTime?
+  settingsId           String?           @unique @map("settings_id")
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  accounts             Account[]
+  comments             Comment[]
+  feedbackComments     FeedbackComment[]
+  pins                 Pin[]
+  sessions             Session[]
+  testFeedback         TestFeedback[]
+  testGroupMemberships TestGroupMember[]
+  moderatedGroups      TestGroup[]       @relation("ModeratedGroups")
+  startedSessions      TestSession[]     @relation("StartedSessions")
+  settings             UserSettings?     @relation(fields: [settingsId], references: [id])
+  widgetFeedback       WidgetFeedback[]
+
+  @@index([settingsId])
+  @@map("users")
+}
+
+model Pin {
+  id        String    @id @default(cuid())
+  pageUrl   String    @map("page_url")
+  xPercent  Float     @map("x_percent")
+  yPercent  Float     @map("y_percent")
+  status    PinStatus @default(new)
+  userId    String    @map("user_id")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  comments  Comment[]
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([pageUrl])
+  @@index([status])
+  @@index([userId])
+  @@map("pins")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  pinId     String   @map("pin_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pin       Pin      @relation(fields: [pinId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([pinId])
+  @@index([userId])
+  @@map("comments")
+}
+
+model TestGroup {
+  id               String                @id @default(cuid())
+  name             String
+  description      String?
+  domain           String?
+  moderatorId      String?               @map("moderator_id")
+  status           GroupStatus           @default(ACTIVE)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  sheetIntegration SheetIntegration?
+  invitations      TestGroupInvitation[]
+  members          TestGroupMember[]
+  moderator        User?                 @relation("ModeratedGroups", fields: [moderatorId], references: [id])
+  sessions         TestSession[]
+  widgetFeedback   WidgetFeedback[]
+
+  @@index([domain])
+  @@index([moderatorId])
+  @@map("test_groups")
+}
+
+model TestGroupMember {
+  id          String     @id @default(cuid())
+  role        MemberRole @default(TEST_MEMBER)
+  testGroupId String     @map("test_group_id")
+  userId      String     @map("user_id")
+  joinedAt    DateTime   @default(now()) @map("joined_at")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  testGroup   TestGroup  @relation(fields: [testGroupId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([testGroupId])
+  @@index([userId])
+  @@map("test_group_members")
+}
+
+model TestSession {
+  id          String         @id @default(cuid())
+  status      SessionStatus  @default(ACTIVE)
+  testGroupId String         @map("test_group_id")
+  startedById String         @map("started_by_id")
+  startTime   DateTime       @default(now())
+  endTime     DateTime?
+  feedback    TestFeedback[]
+  startedBy   User           @relation("StartedSessions", fields: [startedById], references: [id])
+  testGroup   TestGroup      @relation(fields: [testGroupId], references: [id], onDelete: Cascade)
+
+  @@index([testGroupId])
+  @@index([startedById])
+  @@map("test_sessions")
+}
+
+model TestFeedback {
+  id           String         @id @default(cuid())
+  content      String
+  sessionId    String         @map("session_id")
+  userId       String         @map("user_id")
+  status       FeedbackStatus @default(TODO)
+  emotion      String?
+  response     String?
+  responderId  String?        @map("responder_id")
+  responseTime DateTime?      @map("response_time")
+  rating       Int?
+  category     String?
+  qualityScore Float?         @map("quality_score")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  metadata     Json?
+  session      TestSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id])
+
+  @@index([sessionId])
+  @@index([userId])
+  @@map("test_feedback")
+}
+
+model WidgetFeedback {
+  id           String            @id @default(cuid())
+  testGroupId  String            @map("test_group_id")
+  submittedBy  String?           @map("submitted_by")
+  url          String
+  x            Int
+  y            Int
+  emoji        String?
+  severity     String?
+  comment      String?
+  status       FeedbackStatus    @default(TODO)
+  priority     String            @default("LOW")
+  response     String?
+  responderId  String?           @map("responder_id")
+  responseTime DateTime?         @map("response_time")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  comments     FeedbackComment[]
+  user         User?             @relation(fields: [submittedBy], references: [id])
+  testGroup    TestGroup         @relation(fields: [testGroupId], references: [id], onDelete: Cascade)
+
+  @@index([testGroupId])
+  @@index([submittedBy])
+  @@index([status])
+  @@map("widget_feedback")
+}
+
+model FeedbackComment {
+  id         String         @id @default(cuid())
+  feedbackId String         @map("feedback_id")
+  authorId   String?        @map("author_id")
+  content    String
+  authorType String         @default("USER")
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  author     User?          @relation(fields: [authorId], references: [id])
+  feedback   WidgetFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackId])
+  @@index([authorId])
+  @@map("feedback_comments")
+}
+
+model TestGroupInvitation {
+  id          String       @id @default(cuid())
+  email       String
+  role        MemberRole   @default(TEST_MEMBER)
+  testGroupId String       @map("test_group_id")
+  status      InviteStatus @default(PENDING)
+  token       String       @unique
+  expiresAt   DateTime     @map("expires_at")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  testGroup   TestGroup    @relation(fields: [testGroupId], references: [id], onDelete: Cascade)
+
+  @@index([testGroupId])
+  @@map("test_group_invitations")
+}
+
+model SheetIntegration {
+  id            String    @id @default(cuid())
+  testGroupId   String    @unique @map("test_group_id")
+  spreadsheetId String    @map("spreadsheet_id")
+  accessToken   String    @map("access_token")
+  refreshToken  String    @map("refresh_token")
+  expiresAt     DateTime  @map("expires_at")
+  lastSync      DateTime? @map("last_sync")
+  settings      Json?     @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  testGroup     TestGroup @relation(fields: [testGroupId], references: [id], onDelete: Cascade)
+
+  @@index([testGroupId])
+  @@map("sheet_integrations")
+}
+
+model EventLog {
+  id          String    @id @default(cuid())
+  eventType   String    // "PIN_CREATE", "STATUS_UPDATE", etc.
+  pinId       String?
+  timestamp   DateTime  @default(now())
+  pageUrl     String?
+  userId      String?
+  testGroupId String?
+  data        Json?     // { coordinates: {x,y}, emoji, description }
+  createdAt   DateTime  @default(now())
+  
+  @@index([pinId])
+  @@index([userId])
+  @@index([testGroupId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@map("event_logs")
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  sessionId String
+  action    String   // "LOGIN", "PIN_CREATE", etc.
+  metadata  Json?    // { pinId: "abc" }
+  ipAddress String?  // Anonymized (e.g., "192.168.1.XXX")
+  userAgent String?
+  timestamp DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("user_activities")
+}
+
+enum Role {
+  ADMIN
+  MODERATOR
+  TEST_MEMBER
+}
+
+enum PinStatus {
+  new
+  inProgress
+  resolved
+}
+
+enum MemberRole {
+  ADMIN
+  MODERATOR
+  TEST_MEMBER
+}
+
+enum GroupStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum FeedbackStatus {
+  TODO
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "lib": ["dom", "esnext"],
+    "esModuleInterop": true,
+    "strict": true,
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "target": "es5",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "outDir": "./public/widget",
+    "declaration": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/widget",
+    "src/components/feedback",
+    "src/types"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+} 

@@ -1,0 +1,123 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { v    const submittedFeedback = await prisma.testFeedback.create({
+      data: {
+        sessionId: activeSession.id,
+        userId: tokenPayload.userId,
+        content: feedback.comment,
+        emotion: feedback.emotion,
+        rating: null,
+        qualityScore: null,
+        metadata: {
+          xPercent: feedback.coordinates.xPercent,
+          yPercent: feedback.coordinates.yPercent,
+          elementSelector: feedback.elementSelector,
+          url: feedback.url,
+          timestamp: feedback.timestamp
+        }
+      }
+    });onwebtoken';
+import { prisma } from '@/lib/prisma';
+import { validateDomain } from '@/lib/domain-validation';
+
+interface TokenPayload {
+  userId: string;
+  testGroupId: string;
+  type: string;
+}
+
+interface FeedbackSubmission {
+  testGroupId: string;
+  coordinates: { xPercent: number; yPercent: number };
+  emotion: string;
+  comment: string;
+  elementSelector?: string;
+  url: string;
+  timestamp: string;
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization token' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const feedback: FeedbackSubmission = req.body;
+
+    // Verify member token
+    let tokenPayload: TokenPayload;
+    try {
+      tokenPayload = verify(token, process.env.WIDGET_JWT_SECRET!) as TokenPayload;
+      
+      if (tokenPayload.type !== 'widget_auth' || tokenPayload.testGroupId !== feedback.testGroupId) {
+        throw new Error('Invalid token');
+      }
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    // Validate domain from URL
+    const isValid = await validateDomain(new URL(feedback.url).origin, feedback.testGroupId);
+    if (!isValid) {
+      return res.status(403).json({ error: 'Domain not authorized for this test group' });
+    }
+
+    // Get active testing session
+    const activeSession = await prisma.testSession.findFirst({
+      where: {
+        startedById: tokenPayload.userId,
+        testGroupId: feedback.testGroupId,
+        status: 'ACTIVE'
+      }
+    });
+
+    if (!activeSession) {
+      return res.status(400).json({ error: 'No active testing session found' });
+    }
+
+    // Create feedback record
+    const feedbackRecord = await prisma.testFeedback.create({
+      data: {
+        sessionId: activeSession.id,
+        userId: tokenPayload.userId,
+        content: feedback.comment,
+        category: feedback.emotion,
+        rating: null,
+        qualityScore: null,
+        metadata: {
+          coordinates: feedback.coordinates,
+          elementSelector: feedback.elementSelector,
+          url: feedback.url,
+          timestamp: feedback.timestamp
+        }
+      }
+    });
+
+    // Create audit log entry
+    await prisma.testSessionAuditLog.create({
+      data: {
+        sessionId: activeSession.id,
+        userId: tokenPayload.userId,
+        action: 'FEEDBACK_SUBMITTED',
+        details: {
+          feedbackId: feedbackRecord.id,
+          url: feedback.url,
+          timestamp: feedback.timestamp
+        }
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      feedbackId: feedbackRecord.id
+    });
+  } catch (error) {
+    console.error('Feedback submission error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+} 

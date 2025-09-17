@@ -1,0 +1,102 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "overrides": [
+    {
+      "files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
+      "excludedFiles": [
+        ".next/**/*",
+        "node_modules/**/*",
+        "dist/**/*",
+        "src/generated/**/*",
+        "build/**/*",
+        "coverage/**/*",
+        "*.config.js",
+        "*.setup.js",
+        "test-*.js",
+        "**/*.min.js",
+        "**/*.bundle.js"
+      ],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": "./tsconfig.json"
+      },
+      "plugins": ["@typescript-eslint"],
+      "env": {
+        "browser": true,
+        "node": true,
+        "es2022": true
+      },
+      "globals": {
+        "window": true,
+        "document": true,
+        "navigator": true,
+        "fetch": true,
+        "Headers": true,
+        "Request": true,
+        "Response": true,
+        "URL": true,
+        "URLSearchParams": true,
+        "TextEncoder": true,
+        "TextDecoder": true,
+        "console": true,
+        "process": true,
+        "__dirname": true,
+        "module": true,
+        "require": true,
+        "exports": true,
+        "Buffer": true,
+        "global": true
+      },
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["warn", {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_",
+          "destructuredArrayIgnorePattern": "^_",
+          "ignoreRestSiblings": true
+        }],
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-empty-interface": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/no-misused-promises": "off",
+        "@typescript-eslint/prefer-nullish-coalescing": "off",
+        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/no-unused-private-class-members": "off",
+        "no-undef": ["error", { "typeof": true }],
+        "no-empty": "off",
+        "no-case-declarations": "off",
+        "no-prototype-builtins": "off",
+        "no-control-regex": "off",
+        "no-useless-escape": "off",
+        "no-constant-binary-expression": "off",
+        "no-fallthrough": "off",
+        "no-extra-boolean-cast": "off",
+        "no-unreachable": "off"
+      }
+    },
+    {
+      "files": ["*.config.js", "*.setup.js", "test-*.js"],
+      "env": {
+        "node": true,
+        "commonjs": true
+      },
+      "rules": {
+        "no-undef": ["error", { "typeof": true }]
+      }
+    }
+  ]
+}
