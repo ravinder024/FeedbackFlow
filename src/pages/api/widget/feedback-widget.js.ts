@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
-import { prisma } from '@/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -14,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-    const filePath = path.join(process.cwd(), 'public', 'widget', 'feedback-widget.js');
+    const filePath = path.join(process.cwd(), 'public', 'widget', 'index.js');
     const fileContent = await fs.promises.readFile(filePath, 'utf8');
 
     // Set caching headers

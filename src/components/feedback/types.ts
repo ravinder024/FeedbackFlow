@@ -1,31 +1,4 @@
-export type PinStatus = 'new' | 'inProgress' | 'resolved';
 export type Severity = 'Low' | 'Medium' | 'High';
-
-export interface Coordinates {
-  xPercent: number;
-  yPercent: number;
-}
-
-export interface Pin {
-  id: string;
-  pageUrl: string;
-  xPercent: number;    // 0-100
-  yPercent: number;    // 0-100
-  status: PinStatus;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PinCreationData {
-  pageUrl: string;
-  xPercent: number;
-  yPercent: number;
-}
-
-export interface PinUpdateData {
-  status?: PinStatus;
-}
 
 export interface TestSessionContext {
   id: string;
@@ -41,9 +14,8 @@ export interface FeedbackWidgetProps {
     rating: number | null;
     emotion: string;
     metadata: {
-      xPercent: number;
-      yPercent: number;
       pageUrl: string;
+      severity: Severity;
     };
     testSessionId: string;
   }) => Promise<void>;

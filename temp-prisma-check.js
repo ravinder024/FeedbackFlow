@@ -1,0 +1,3 @@
+const { PrismaClient } = require('@prisma/client');
+
+(async function(){ try { const prisma = new PrismaClient(); const count = await prisma.eventLog.count({ where: { testGroupId: process.env.TESTGROUP || process.env.TG } }); console.log('DB COUNT —', count); } catch (err) { console.error('ERROR —', err.message || err); process.exit(1); } finally { try { await prisma.$disconnect(); } catch(e){} } })();

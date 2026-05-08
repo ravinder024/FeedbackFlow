@@ -11,9 +11,6 @@ interface TokenPayload {
 
 interface FeedbackSubmission {
   testGroupId: string;
-  coordinates?: { xPercent: number; yPercent: number };
-  x?: number;
-  y?: number;
   emotion?: string;
   emoji?: string;
   severity?: string;
@@ -65,16 +62,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Check if this is a direct widget submission (has x,y) or session-based (has coordinates)
-    const isWidgetSubmission = feedbackSubmission.x !== undefined && feedbackSubmission.y !== undefined;
+    // Session-based requests include an explicit session id in payload.
+    const isSessionSubmission = Boolean((req.body as any)?.testSessionId);
 
-    if (isWidgetSubmission) {
+    if (!isSessionSubmission) {
       // Handle direct widget feedback submission
-      const { x, y, emoji, severity, comment } = feedbackSubmission;
-
-      if (x === undefined || y === undefined) {
-        return res.status(400).json({ error: 'Missing required fields: x, y' });
-      }
+      const { emoji, severity, comment } = feedbackSubmission;
 
       // Create feedback record
       const feedback = await prisma.widgetFeedback.create({
@@ -82,8 +75,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           testGroupId: tokenPayload.testGroupId,
           submittedBy: tokenPayload.userId,
           url: feedbackSubmission.url,
-          x: Math.round(x),
-          y: Math.round(y),
           emoji: emoji || null,
           severity: severity || null,
           comment: comment || null,
@@ -97,7 +88,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`✅ Widget feedback submitted for test group ${tokenPayload.testGroupId}:`, {
         id: feedback.id,
         url: feedbackSubmission.url,
-        position: { x, y },
         emoji,
         severity
       });
@@ -109,10 +99,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } else {
       // Handle session-based feedback submission (existing functionality)
-      if (!feedbackSubmission.coordinates) {
-        return res.status(400).json({ error: 'Missing coordinates for session feedback' });
-      }
-
       // Get the active test session
       const activeSession = await prisma.testSession.findFirst({
         where: {
@@ -137,8 +123,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           rating: null,
           qualityScore: null,
           metadata: {
-            xPercent: feedbackSubmission.coordinates.xPercent,
-            yPercent: feedbackSubmission.coordinates.yPercent,
             elementSelector: feedbackSubmission.elementSelector,
             url: feedbackSubmission.url,
             timestamp: feedbackSubmission.timestamp

@@ -9,7 +9,6 @@ export default async function handler(
     try {
       const {
         eventType,
-        pinId,
         userId,
         pageUrl,
         x,
@@ -31,8 +30,7 @@ export default async function handler(
       if (metadata) data.metadata = metadata;
 
       const eventLog = await EventLogger.logEvent({
-        eventType: eventType || EVENT_TYPES.PIN_CREATED,
-        pinId,
+        eventType: eventType || EVENT_TYPES.FEEDBACK_SUBMITTED,
         userId,
         pageUrl,
         testGroupId,
@@ -48,7 +46,6 @@ export default async function handler(
     try {
       const { 
         pageUrl, 
-        pinId, 
         userId,
         testGroupId,
         eventType,
@@ -59,7 +56,6 @@ export default async function handler(
       } = req.query;
 
       const result = await EventLogger.getEvents({
-        pinId: pinId as string,
         userId: userId as string,
         testGroupId: testGroupId as string,
         eventType: eventType as string,

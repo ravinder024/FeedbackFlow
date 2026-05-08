@@ -1,77 +1,51 @@
-# FeedbackFlow AI Developer Instructions
+## FeedbackFlow — AI developer instructions
 
-## Project Overview
-FeedbackFlow is a B2B feedback collection platform with an embeddable widget for client websites. It uses Next.js with PostgreSQL/Prisma, NextAuth, and role-based access control (RBAC).
+Quick summary
+- Dual-application repo: a Next.js dashboard/API (pages router under `src/pages/`) and a separately-built embeddable widget (`src/widget/`) that outputs a UMD bundle to `public/widget/index.js`.
 
-## Architecture Patterns
+When to run first (fast path)
+- Local app (Next dev server): `npm run dev`
+- Build widget (required before testing the embed): `npm run build:widget` (uses `webpack.config.js` + `tsconfig.widget.json`)
+- Production build: `npm run build` then `npm run start`
+- DB seed: `npm run prisma:seed` (see `prisma/seed.ts`)
 
-### Dual App Structure
-- **Main App**: Next.js pages router (`src/pages/`) for dashboard and API
-- **Widget**: Standalone React component built with Webpack (`src/widget/`) for embedding
+Big picture & why it’s organized this way
+- Main app: full React/Next UI, server-side API routes, auth and RBAC. Inspect `src/pages/` for UI and `src/pages/api/` for endpoints.
+- Widget: small standalone bundle intended to be embedded in client sites. Keeping it separate lets teams ship the widget independently and avoid bundling the whole app into the customer site.
 
-### Key Data Models (see `prisma/schema.prisma`)
-- **TestGroup**: Domain-specific feedback collection groups
-- **Pin**: Feedback points with coordinates and status tracking
-- **EventLog**: System events and user actions logging
-- **UserActivity**: Anonymized user session tracking
+Key files & integration points (use these as your navigation map)
+- Auth & session: API routes use `getServerSession(req, res, authOptions)` — see typical usage in `src/pages/api/*` and `src/lib/auth`.
+- RBAC: `src/lib/rbac.ts` — always call this before returning protected data.
+- Prisma: `prisma/schema.prisma` and `src/lib/prisma.ts` (DB client). Migrations live under `prisma/migrations`.
+- Event logging: `src/lib/event-logger.ts` — used across API handlers to record actions and audits.
+- Widget entry: `src/widget/index.tsx`; build pipeline in `webpack.config.js`; widget config in `tsconfig.widget.json`. Output: `public/widget/index.js` (UMD).
+- Middleware: `middleware.ts` performs request anonymization (IP masking) — be cautious when modifying.
 
-## Development Workflows
+Conventions and patterns to follow
+- API handlers: authenticate via `getServerSession`, authorize via `src/lib/rbac.ts`, then call `src/lib/event-logger.ts` to record significant events.
+- Widget auth: uses short-lived `memberToken` for test groups. Token handling and validation logic lives near widget/server endpoints.
+- Seeding & migrations: prefer `scripts/safe-migrate` or `npm run prisma:seed` flows instead of manual SQL; look at `scripts/` for helpers.
+- Tests: Jest is configured (`jest.config.js`, `jest.setup.js`). Unit tests use React Testing Library conventions.
 
-### Build Commands
-```bash
-npm run dev              # Next.js development server
-npm run build:widget     # Webpack build for embeddable widget
-npm run build            # Production Next.js build
-npm run prisma:seed      # Database seeding
-```
+Developer workflows / tips
+- If you change widget TSX or styles: run `npm run build:widget` and open `public/demo-sample.html` or `public/pin-test.html` to smoke-test the embed.
+- If you change API shape or DB schema: add a migration (`prisma migrate` or `scripts/safe-migrate`), run the migration, then `npm run prisma:seed` if you need test data.
+- For a quick local production-like test: `npm run build` then `npm run start`.
 
-### Testing Strategy
-- Jest configuration in `jest.config.js` with React Testing Library
-- API endpoints in `src/pages/api/` follow REST patterns
-- Test groups use mock data via `mock-[id].ts` API routes
+Common gotchas (concrete examples)
+- Forgetting to build the widget: the hosted demo and `public/widget/index.js` won’t reflect your changes.
+- Middleware anonymization: tests that expect IP or geo metadata may fail because `middleware.ts` masks IPs.
+- EventLog uses flexible JSON metadata — queries that assume a fixed shape may break (see `prisma/schema.prisma`).
 
-## Project-Specific Conventions
+Where to look for troubleshooting
+- `scripts/` contains backups, maintenance, and verification helpers (PowerShell variants exist for Windows).
+- `public/widget/index.js.LICENSE.txt` may be created by bundler; ignore for functionality.
 
-### API Route Patterns
-- Use `getServerSession(req, res, authOptions)` for authentication
-- RBAC checks via `src/lib/rbac.ts` before data access
-- Event logging through `src/lib/event-logger.ts` for audit trails
+When in doubt, open these files first:
+- `src/lib/prisma.ts`, `prisma/schema.prisma` (DB)
+- `src/lib/event-logger.ts` (audit behavior)
+- `src/lib/rbac.ts` (authorization rules)
+- `src/widget/index.tsx`, `webpack.config.js`, `tsconfig.widget.json` (widget build)
+- `middleware.ts` (request anonymization)
 
-### Widget Integration
-- Widget builds to `public/widget/index.js` as UMD module
-- External React/ReactDOM dependencies for client integration
-- Token-based authentication via `memberToken` for test groups
-
-### Database Migrations
-- Use zero-downtime patterns (see `docs/event-monitoring-system.md`)
-- Index all foreign keys and timestamp fields for performance
-- Event retention: 365 days (system), 90 days (authenticated users), 30 days (anonymous)
-
-### Middleware & Security
-- Request anonymization in `middleware.ts` for IP addresses
-- Session management with secure cookie handling
-- Domain validation for test group creation
-
-## Essential File Locations
-
-### Core Services
-- `src/lib/prisma.ts` - Database client
-- `src/lib/event-logger.ts` - Centralized logging
-- `src/lib/rbac.ts` - Role-based access control
-- `src/lib/email.ts` - Email notifications
-
-### Widget System
-- `src/widget/index.tsx` - Widget entry point
-- `webpack.config.js` - Widget build configuration
-- `tsconfig.widget.json` - Widget TypeScript config
-
-### Infrastructure
-- `scripts/` - Database backup, maintenance, and deployment scripts
-- `docs/` - Comprehensive setup and monitoring guides
-- `prisma/migrations/` - Database schema evolution
-
-## Common Gotchas
-- Widget requires separate build step before testing
-- Test groups must have valid domain format for creation
-- EventLog uses JSON fields for flexible metadata storage
-- Windows-specific scripts in PowerShell for automation
+If anything here is unclear or you need deeper examples (small code snippets showing the API -> RBAC -> event-log pattern, or the widget build entry), tell me which section and I will expand with examples from the codebase.

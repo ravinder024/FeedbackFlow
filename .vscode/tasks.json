@@ -9,6 +9,23 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"label": "Test Invitations API",
+			"type": "shell",
+			"command": "curl -X POST http://localhost:3000/api/invitations -H \"Content-Type: application/json\" -d \"{\\\"testGroupId\\\":\\\"test-group-id\\\",\\\"emails\\\":[\\\"test1@example.com\\\",\\\"test2@example.com\\\"],\\\"role\\\":\\\"MEMBER\\\"}\"",
+			"args": [],
+			"problemMatcher": [],
+			"group": "test"
+		},
+		{
+			"label": "Run Next.js Dev Server",
+			"type": "shell",
+			"command": "npm run dev",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

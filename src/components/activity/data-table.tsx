@@ -126,10 +126,6 @@ export function DataTable<TData, TValue>({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-[200px]">
                 {[
-                  'PIN_CREATED',
-                  'PIN_UPDATED', 
-                  'PIN_DELETED',
-                  'COMMENT_ADDED',
                   'FEEDBACK_SUBMITTED',
                   'PAGE_VISIT',
                   'HOME_VISIT',
@@ -197,7 +193,6 @@ export function DataTable<TData, TValue>({
                     >
                       {column.id === "eventType" ? "Event Type" :
                        column.id === "pageUrl" ? "Page URL" :
-                       column.id === "pinId" ? "Pin ID" :
                        column.id === "testGroupId" ? "Test Group" :
                        column.id}
                     </DropdownMenuCheckboxItem>

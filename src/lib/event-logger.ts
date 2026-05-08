@@ -11,7 +11,6 @@ import { Prisma } from '@prisma/client';
 
 export interface EventLogData {
   eventType: string;
-  pinId?: string;
   pageUrl?: string;
   userId?: string;
   testGroupId?: string;
@@ -29,14 +28,13 @@ export interface UserActivityData {
 
 export class EventLogger {
   /**
-   * Log a system event (pin creation, status updates, etc.)
+   * Log a system event.
    */
   static async logEvent(data: EventLogData) {
     try {
       return await prisma.eventLog.create({
         data: {
           eventType: data.eventType,
-          pinId: data.pinId,
           pageUrl: data.pageUrl,
           userId: data.userId,
           testGroupId: data.testGroupId,
@@ -76,7 +74,6 @@ export class EventLogger {
    * Get event logs with filtering and pagination
    */
   static async getEvents(options: {
-    pinId?: string;
     userId?: string;
     testGroupId?: string;
     eventType?: string;
@@ -86,7 +83,6 @@ export class EventLogger {
     offset?: number;
   } = {}) {
     const {
-      pinId,
       userId,
       testGroupId,
       eventType,
@@ -98,7 +94,6 @@ export class EventLogger {
 
     const where: any = {};
 
-    if (pinId) where.pinId = pinId;
     if (userId) where.userId = userId;
     if (testGroupId) where.testGroupId = testGroupId;
     if (eventType) where.eventType = eventType;
@@ -309,17 +304,6 @@ export class EventLogger {
 
 // Event type constants for consistency
 export const EVENT_TYPES = {
-  // Pin events
-  PIN_CREATED: 'PIN_CREATED',
-  PIN_UPDATED: 'PIN_UPDATED',
-  PIN_DELETED: 'PIN_DELETED',
-  PIN_STATUS_CHANGED: 'PIN_STATUS_CHANGED',
-
-  // Comment events
-  COMMENT_ADDED: 'COMMENT_ADDED',
-  COMMENT_EDITED: 'COMMENT_EDITED',
-  COMMENT_DELETED: 'COMMENT_DELETED',
-
   // Session events
   SESSION_STARTED: 'SESSION_STARTED',
   SESSION_ENDED: 'SESSION_ENDED',
@@ -339,10 +323,7 @@ export const EVENT_TYPES = {
 export const USER_ACTIONS = {
   LOGIN: 'LOGIN',
   LOGOUT: 'LOGOUT',
-  PIN_CREATE: 'PIN_CREATE',
-  PIN_VIEW: 'PIN_VIEW',
-  PIN_EDIT: 'PIN_EDIT',
-  COMMENT_CREATE: 'COMMENT_CREATE',
+  EVENT_CREATE: 'EVENT_CREATE',
   PAGE_VIEW: 'PAGE_VIEW',
   FEEDBACK_SUBMIT: 'FEEDBACK_SUBMIT',
 } as const;

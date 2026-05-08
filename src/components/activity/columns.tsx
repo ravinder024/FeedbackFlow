@@ -3,13 +3,12 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ExternalLink, MapPin } from 'lucide-react';
+import { ArrowUpDown, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export type EventLogRow = {
   id: string;
   eventType: string;
-  pinId: string | null;
   pageUrl: string | null;
   userId: string | null;
   testGroupId: string | null;
@@ -25,10 +24,6 @@ export type EventLogRow = {
 // Event type color mapping
 const getEventTypeBadge = (eventType: string) => {
   const colors: Record<string, string> = {
-    'PIN_CREATED': 'bg-green-100 text-green-800',
-    'PIN_UPDATED': 'bg-blue-100 text-blue-800',
-    'PIN_DELETED': 'bg-red-100 text-red-800',
-    'COMMENT_ADDED': 'bg-purple-100 text-purple-800',
     'FEEDBACK_SUBMITTED': 'bg-orange-100 text-orange-800',
     'PAGE_VISIT': 'bg-gray-100 text-gray-800',
     'HOME_VISIT': 'bg-indigo-100 text-indigo-800',
@@ -53,13 +48,10 @@ const ViewContextButton = ({ row }: { row: EventLogRow }) => {
     if (row.pageUrl) {
       // Open the page URL in a new tab
       window.open(row.pageUrl, '_blank');
-    } else if (row.pinId) {
-      // If we have a pin ID but no page URL, we could show a modal or navigate to a pin view
-      console.log('View pin:', row.pinId);
     }
   };
 
-  const hasContext = row.pageUrl || row.pinId;
+  const hasContext = row.pageUrl;
   
   if (!hasContext) return null;
 
@@ -70,17 +62,10 @@ const ViewContextButton = ({ row }: { row: EventLogRow }) => {
       onClick={handleViewContext}
       className="h-7 px-2 text-xs"
     >
-      {row.pinId ? (
-        <>
-          <MapPin className="h-3 w-3 mr-1" />
-          View Pin
-        </>
-      ) : (
-        <>
-          <ExternalLink className="h-3 w-3 mr-1" />
-          View Page
-        </>
-      )}
+      <>
+        <ExternalLink className="h-3 w-3 mr-1" />
+        View Page
+      </>
     </Button>
   );
 };
@@ -210,27 +195,6 @@ export const columns: ColumnDef<EventLogRow>[] = [
       return (
         <div className="text-sm font-mono">
           {displayUrl}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: 'pinId',
-    header: 'Pin ID',
-    cell: ({ row }: any) => {
-      const pinId = row.getValue('pinId') as string;
-      
-      if (!pinId) {
-        return (
-          <div className="text-sm text-gray-500">
-            —
-          </div>
-        );
-      }
-      
-      return (
-        <div className="text-sm font-mono bg-gray-50 px-2 py-1 rounded text-center">
-          {pinId}
         </div>
       );
     },

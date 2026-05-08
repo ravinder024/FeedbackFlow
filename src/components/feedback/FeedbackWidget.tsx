@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FeedbackWidgetProps, Coordinates, Severity } from './types';
-import { FeedbackCollector } from './FeedbackCollector';
+import { FeedbackWidgetProps, Severity } from './types';
 
 const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({ 
   testSession, 
@@ -12,25 +11,13 @@ const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   mode = 'session',
   onClose
 }) => {
-  const [activeFeedback, setActiveFeedback] = useState<{
-    coordinates: Coordinates;
-    pageUrl: string;
-  } | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [emotion, setEmotion] = useState<string>('😊');
   const [severity, setSeverity] = useState<Severity>('Low');
 
-  const handleFeedbackCapture = (feedback: {
-    coordinates: Coordinates;
-    pageUrl: string;
-  }) => {
-    // In collect mode, we don't need an active test session
-    if (mode === 'session' && !testSession?.isActive) return;
-    setActiveFeedback(feedback);
-  };
-
   const handleSubmit = async () => {
-    if (!activeFeedback) return;
+    if (!comment.trim()) return;
 
     // In collect mode, we'll save to localStorage
     if (mode === 'collect') {
@@ -38,7 +25,6 @@ const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
         content: comment,
         emotion,
         severity,
-        coordinates: activeFeedback.coordinates,
         pageUrl: targetUrl || url,
         timestamp: new Date().toISOString(),
       };
@@ -51,7 +37,7 @@ const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
       feedbackList.push(feedback);
       localStorage.setItem('demo_feedback', JSON.stringify(feedbackList));
       
-      setActiveFeedback(null);
+      setIsFormOpen(false);
       setComment('');
       setEmotion('😊');
       setSeverity('Low');
@@ -70,37 +56,32 @@ const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
       rating: null,
       emotion,
       metadata: {
-        xPercent: activeFeedback.coordinates.xPercent,
-        yPercent: activeFeedback.coordinates.yPercent,
-        pageUrl: activeFeedback.pageUrl,
+        pageUrl: url || window.location.href,
         severity
       },
       testSessionId: testSession.id
     };
 
     await onFeedbackSubmit(feedbackData);
-    setActiveFeedback(null);
+    setIsFormOpen(false);
     setComment('');
     setEmotion('😊');
     setSeverity('Low');
   };
 
   return (
-    <div className="min-h-screen">
-      <FeedbackCollector onFeedbackCapture={handleFeedbackCapture} />
-      
-      {/* Feedback Form */}
-      {activeFeedback && (
+    <div className="min-h-screen flex items-center justify-center">
+      <button
+        className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+        onClick={() => setIsFormOpen(true)}
+      >
+        Give Feedback
+      </button>
+
+      {isFormOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
             <h3 className="text-lg font-medium mb-4">Provide Feedback</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Position</label>
-              <p className="text-sm text-gray-500">
-                {activeFeedback.coordinates.xPercent.toFixed(1)}% from left,{' '}
-                {activeFeedback.coordinates.yPercent.toFixed(1)}% from top
-              </p>
-            </div>
             <textarea
               className="w-full p-2 border rounded mb-4"
               placeholder="Enter your feedback..."
@@ -111,7 +92,7 @@ const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
             <div className="flex justify-end gap-2">
               <button
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-                onClick={() => setActiveFeedback(null)}
+                onClick={() => setIsFormOpen(false)}
               >
                 Cancel
               </button>
