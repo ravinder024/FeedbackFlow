@@ -27,20 +27,22 @@ export default function SignIn() {
     setLoading(true);
     setError('');
 
+    let result; // Declare the variable here
+
     try {
       console.log('Attempting login with:', { email: form.email });
-      const response = await signIn('credentials', {
+      result = await signIn('credentials', {
         email: form.email,
         password: form.password,
         redirect: false,
-        callbackUrl: '/dashboard'
+        callbackUrl: '/dashboard',
       });
-      
-      console.log('Sign in response:', response);
 
-      if (response?.error) {
-        console.error('Sign in error:', response.error);
-        setError(response.error);
+      console.log('Sign in response:', result);
+
+      if (result?.error) {
+        console.error('Sign in error:', result.error);
+        setError(result.error);
       } else {
         console.log('Sign in successful, redirecting to dashboard');
         await router.push('/dashboard');
@@ -49,18 +51,8 @@ export default function SignIn() {
       console.error('Sign in exception:', error);
       setError(error?.message || 'An unexpected error occurred');
     } finally {
+      console.log('Sign in result:', result); // Now `result` is defined
       setLoading(false);
-    }
-
-    console.log('Sign in result:', result);
-
-    if (result?.error) {
-      console.error('Sign in error:', result.error);
-      setError(result.error);
-      setLoading(false);
-    } else {
-      console.log('Sign in successful, redirecting to dashboard');
-      router.push('/dashboard');
     }
   };
 
@@ -140,4 +132,4 @@ export default function SignIn() {
       </div>
     </div>
   );
-} 
+}

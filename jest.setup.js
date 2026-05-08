@@ -1,5 +1,16 @@
 import '@testing-library/jest-dom';
 
+// Mock crypto.randomUUID for Node.js environment
+if (typeof global.crypto === 'undefined') {
+  const crypto = require('crypto');
+  global.crypto = {
+    randomUUID: () => crypto.randomUUID(),
+  };
+} else if (!global.crypto.randomUUID) {
+  const crypto = require('crypto');
+  global.crypto.randomUUID = () => crypto.randomUUID();
+}
+
 // Mock next/router
 jest.mock('next/router', () => ({
   useRouter() {

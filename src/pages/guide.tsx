@@ -141,6 +141,40 @@ export default function TestingGuide() {
                 Start Demo Test
               </Link>
             </div>
+
+            {/* ── Event Tracking Sandbox ───────────────────────────────── */}
+            <div className="mt-10 border-t border-gray-200 pt-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-1">Event Tracking Sandbox</h2>
+              <p className="text-sm text-gray-500 mb-6">
+                Use these buttons to verify dead click and rage click detection. Check the browser console for generated issues.
+              </p>
+
+              <div className="flex flex-wrap gap-4">
+                {/* Dead click: no onClick — ClickTracker detects no DOM response after 400ms */}
+                <button
+                  data-testid="test-dead-click"
+                  type="button"
+                  className="px-6 py-3 rounded-md border-2 border-red-400 bg-red-50 text-red-700 font-medium hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400"
+                >
+                  Test Dead Click
+                </button>
+
+                {/* Rage click: no onClick — click 3+ times quickly to trigger rage_click */}
+                <button
+                  data-testid="test-rage-click"
+                  type="button"
+                  className="px-6 py-3 rounded-md border-2 border-orange-400 bg-orange-50 text-orange-700 font-medium hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+                  Test Rage Click
+                </button>
+              </div>
+
+              <p className="mt-4 text-xs text-gray-400">
+                Dead Click: click once and wait ~400 ms — a <code>dead_click</code> event should appear in the console.
+                Rage Click: click 3+ times rapidly — a <code>rage_click</code> event should appear in the console.
+              </p>
+            </div>
+
           </div>
         </div>
       </div>

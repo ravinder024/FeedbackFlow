@@ -65,9 +65,7 @@ model User {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
   accounts             Account[]
-  comments             Comment[]
   feedbackComments     FeedbackComment[]
-  pins                 Pin[]
   sessions             Session[]
   testFeedback         TestFeedback[]
   testGroupMemberships TestGroupMember[]
@@ -78,39 +76,6 @@ model User {
 
   @@index([settingsId])
   @@map("users")
-}
-
-model Pin {
-  id        String    @id @default(cuid())
-  pageUrl   String    @map("page_url")
-  xPercent  Float     @map("x_percent")
-  yPercent  Float     @map("y_percent")
-  status    PinStatus @default(new)
-  userId    String    @map("user_id")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  comments  Comment[]
-  user      User      @relation(fields: [userId], references: [id])
-
-  @@index([pageUrl])
-  @@index([status])
-  @@index([userId])
-  @@map("pins")
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  pinId     String   @map("pin_id")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  pin       Pin      @relation(fields: [pinId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@index([pinId])
-  @@index([userId])
-  @@map("comments")
 }
 
 model TestGroup {
@@ -195,8 +160,6 @@ model WidgetFeedback {
   testGroupId  String            @map("test_group_id")
   submittedBy  String?           @map("submitted_by")
   url          String
-  x            Int
-  y            Int
   emoji        String?
   severity     String?
   comment      String?
@@ -215,6 +178,23 @@ model WidgetFeedback {
   @@index([submittedBy])
   @@index([status])
   @@map("widget_feedback")
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  type            String
+  element         String?
+  page            String
+  subtype         String? // For navigation: "page_load" or "route_change"
+  session_id      String? // For grouping events into sessions
+  previous_events Json?   // Rolling context buffer for rage_click/dead_click
+  timestamp       DateTime @default(now())
+
+  @@index([type])
+  @@index([page])
+  @@index([session_id])
+  @@index([timestamp])
+  @@map("events")
 }
 
 model FeedbackComment {
@@ -268,16 +248,14 @@ model SheetIntegration {
 
 model EventLog {
   id          String    @id @default(cuid())
-  eventType   String    // "PIN_CREATE", "STATUS_UPDATE", etc.
-  pinId       String?
+  eventType   String
   timestamp   DateTime  @default(now())
   pageUrl     String?
   userId      String?
   testGroupId String?
-  data        Json?     // { coordinates: {x,y}, emoji, description }
+  data        Json?
   createdAt   DateTime  @default(now())
   
-  @@index([pinId])
   @@index([userId])
   @@index([testGroupId])
   @@index([eventType])
@@ -289,8 +267,8 @@ model UserActivity {
   id        String   @id @default(cuid())
   userId    String
   sessionId String
-  action    String   // "LOGIN", "PIN_CREATE", etc.
-  metadata  Json?    // { pinId: "abc" }
+  action    String
+  metadata  Json?
   ipAddress String?  // Anonymized (e.g., "192.168.1.XXX")
   userAgent String?
   timestamp DateTime @default(now())
@@ -306,12 +284,6 @@ enum Role {
   ADMIN
   MODERATOR
   TEST_MEMBER
-}
-
-enum PinStatus {
-  new
-  inProgress
-  resolved
 }
 
 enum MemberRole {

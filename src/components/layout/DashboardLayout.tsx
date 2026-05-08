@@ -59,13 +59,6 @@ const navigation: NavItem[] = [
     description: 'Manage your test groups'
   },
   {
-    label: 'PinFlow',
-    href: '/pinflow',
-    roles: [UserRole.MODERATOR, UserRole.ADMIN],
-    icon: '📍',
-    description: 'Monitor feedback pin activity'
-  },
-  {
     label: 'Analytics',
     href: '/test-groups/analytics',
     roles: [UserRole.MODERATOR, UserRole.ADMIN],

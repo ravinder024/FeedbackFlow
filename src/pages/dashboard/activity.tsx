@@ -18,7 +18,6 @@ async function getEventLogs() {
       select: {
         id: true,
         eventType: true,
-        pinId: true,
         pageUrl: true,
         userId: true,
         testGroupId: true,
@@ -79,7 +78,6 @@ async function getUserActivity() {
     const activitiesAsEvents = activities.map(activity => ({
       id: activity.id,
       eventType: activity.action,
-      pinId: null,
       pageUrl: (activity.metadata as any)?.path || null,
       userId: activity.userId,
       testGroupId: null,

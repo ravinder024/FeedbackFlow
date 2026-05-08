@@ -141,7 +141,7 @@ async function handleGet(
     const pendingInvitations = await prisma.testGroupInvitation.findMany({
       where: {
         testGroupId: testGroup.id,
-        acceptedAt: null,
+        status: 'PENDING',
         expiresAt: {
           gt: new Date(),
         },
@@ -179,6 +179,7 @@ async function handlePut(
   testGroup: any
 ) {
   const { name, domain, description, settings, isActive } = req.body;
+  const nextStatus = isActive === false ? 'INACTIVE' : 'ACTIVE';
 
   const updatedGroup = await prisma.testGroup.update({
     where: { id: testGroup.id },
@@ -186,7 +187,7 @@ async function handlePut(
       name,
       domain,
       description,
-      isActive,
+      status: nextStatus,
     },
     include: {
       _count: {
